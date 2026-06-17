@@ -201,10 +201,6 @@
                         var win = window.parent || window;
                         var doc = win.document;
                         
-                        if (win._magicTrailCleanup) win._magicTrailCleanup();
-                        var oldBoxes = doc.querySelectorAll('.magic-trail-box');
-                        oldBoxes.forEach(function(box) { if (box.parentNode) box.parentNode.removeChild(box); });
-
                         var container = doc.createElement('div');
                         container.className = 'magic-trail-box';
                         container.style.cssText = "position:fixed; top:0; left:0; width:100vw; height:100vh; pointer-events:none; z-index:2147483647 !important; overflow:hidden;";
@@ -221,25 +217,25 @@
 
                         var myIframe = window.frameElement;
                         var lastX = 0, lastY = 0;
+                        var wasConnected = false;
 
                         var cleanup = function() {
                             win.removeEventListener('mousemove', onMouseMove, true);
                             doc.removeEventListener('fullscreenchange', ensureParent);
                             doc.removeEventListener('webkitfullscreenchange', ensureParent);
                             if (container.parentNode) container.parentNode.removeChild(container);
-                            if (typeof healthCheck !== 'undefined') clearInterval(healthCheck);
                         };
 
-                        var healthCheck = setInterval(function() {
-                            if (myIframe && !myIframe.isConnected) {
-                                cleanup();
-                            }
-                        }, 500);
-
                         var onMouseMove = function(e) {
-                            if (myIframe && !myIframe.isConnected) {
-                                cleanup();
-                                return;
+                            // НОВЫЙ УМНЫЙ АНТИ-ЗОМБИ МЕХАНИЗМ
+                            if (myIframe) {
+                                if (myIframe.isConnected) {
+                                    wasConnected = true; // Запоминаем, что рамка реально появилась на экране
+                                } else if (wasConnected) {
+                                    // Если она БЫЛА на экране, а теперь исчезла - значит её удалили! Убиваем шлейф.
+                                    cleanup();
+                                    return;
+                                }
                             }
 
                             if (Math.abs(e.clientX - lastX) < ${density} && Math.abs(e.clientY - lastY) < ${density}) return;
@@ -258,20 +254,17 @@
                         };
 
                         win.addEventListener('mousemove', onMouseMove, true);
-                        win._magicTrailCleanup = cleanup;
                         window.addEventListener('unload', cleanup);
 
                     } catch(e) { console.error("Ошибка шлейфа:", e); }
                 })();
             <\/script>`;
 
-            // Функция показа уведомления
             const showToast = () => {
                 toast.style.opacity = '1';
                 setTimeout(() => toast.style.opacity = '0', 2500);
             };
 
-            // Бронебойное копирование с двойной защитой
             if (navigator.clipboard && window.isSecureContext) {
                 navigator.clipboard.writeText(geniallyCode)
                     .then(showToast)
@@ -284,7 +277,6 @@
                 try {
                     const textArea = document.createElement("textarea");
                     textArea.value = text;
-                    // Прячем элемент, фиксируем его чтобы не было скролла
                     textArea.style.position = "fixed";
                     textArea.style.top = "0";
                     textArea.style.left = "-999999px";
@@ -295,7 +287,7 @@
                     textArea.remove();
                     showToast();
                 } catch (err) {
-                    alert('Браузер жестко заблокировал копирование в полноэкранном режиме. Нажми Esc и скопируй в обычном режиме.');
+                    alert('Скопируйте код вручную.');
                 }
             }
         });

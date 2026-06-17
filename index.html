@@ -201,7 +201,6 @@
                         var win = window.parent || window;
                         var doc = win.document;
                         
-                        // Удаляем дубликаты, если вставили код дважды
                         var oldBoxes = doc.querySelectorAll('.magic-trail-box');
                         oldBoxes.forEach(function(box) { if (box.parentNode) box.parentNode.removeChild(box); });
 
@@ -209,14 +208,41 @@
                         container.className = 'magic-trail-box';
                         container.style.cssText = "position:fixed; top:0; left:0; width:100vw; height:100vh; pointer-events:none; z-index:2147483647 !important; overflow:hidden;";
 
+                        // Умный прицел: ищем именно белый холст слайда, чтобы прикрепиться поверх него
+                        function ensureParent() {
+                            var newTarget = doc.body;
+                            if (doc.fullscreenElement || doc.webkitFullscreenElement) {
+                                newTarget = doc.fullscreenElement || doc.webkitFullscreenElement;
+                            } else {
+                                // Ищем контейнер слайда Genially
+                                var view = doc.querySelector('.genially-view, .sc-jSUZER, .canvas-container, .view-container');
+                                if (view && view.parentElement) {
+                                    newTarget = view.parentElement; // Цепляемся прямо поверх слайда
+                                } else {
+                                    var root = doc.querySelector('#root');
+                                    if (root) newTarget = root;
+                                }
+                            }
+                            if (container.parentNode !== newTarget) {
+                                newTarget.appendChild(container);
+                            }
+                        }
+                        
+                        ensureParent();
+                        doc.addEventListener('fullscreenchange', ensureParent);
+                        doc.addEventListener('webkitfullscreenchange', ensureParent);
+
                         var lastX = 0, lastY = 0;
 
                         var onMouseMove = function(e) {
-                            // ДИНАМИЧЕСКИЙ ПРИЦЕЛ: всегда ищем самую верхнюю часть экрана (будь то предпросмотр или полноэкранный режим)
-                            var target = doc.fullscreenElement || doc.body;
-                            if (container.parentNode !== target) {
-                                target.appendChild(container);
+                            if (window.closed) {
+                                win.removeEventListener('mousemove', onMouseMove, true);
+                                if (container.parentNode) container.parentNode.removeChild(container);
+                                return;
                             }
+
+                            // Каждое движение мыши проверяем, не перекрыл ли нас слайд, и если что - выпрыгиваем наверх
+                            ensureParent();
 
                             if (Math.abs(e.clientX - lastX) < ${density} && Math.abs(e.clientY - lastY) < ${density}) return;
                             lastX = e.clientX; lastY = e.clientY;

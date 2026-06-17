@@ -7,11 +7,7 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800&display=swap');
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
             font-family: 'Montserrat', sans-serif;
@@ -25,164 +21,74 @@
         }
 
         .editor-container {
-            width: 90%;
-            max-width: 1200px;
-            height: 80vh;
+            width: 90%; max-width: 1200px; height: 80vh;
             background-color: #0b1120;
-            border: 1px solid #1e293b;
-            border-radius: 15px;
-            display: flex;
-            flex-direction: column;
+            border: 1px solid #1e293b; border-radius: 15px;
+            display: flex; flex-direction: column;
             box-shadow: 0 10px 40px rgba(0,0,0,0.6);
             position: relative;
         }
 
-        /* Верхняя панель управления */
         .controls {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 25px 40px;
-            border-bottom: 1px solid #1e293b;
-            gap: 20px;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 25px 40px; border-bottom: 1px solid #1e293b; gap: 20px;
         }
 
         .title {
-            color: #ffae00;
-            font-size: 26px;
-            font-weight: 800;
-            line-height: 1.1;
-            text-transform: uppercase;
+            color: #ffae00; font-size: 26px; font-weight: 800;
+            line-height: 1.1; text-transform: uppercase;
         }
 
-        .control-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
+        .control-group { display: flex; flex-direction: column; gap: 8px; }
 
         .control-group label {
-            font-size: 12px;
-            color: #cbd5e1;
-            font-weight: 600;
-            text-transform: lowercase;
+            font-size: 12px; color: #cbd5e1; font-weight: 600; text-transform: lowercase;
         }
 
         select, input[type="color"] {
-            background-color: transparent;
-            color: #ffffff;
-            border: 2px solid #ffae00;
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 600;
-            cursor: pointer;
-            outline: none;
+            background-color: transparent; color: #ffffff;
+            border: 2px solid #ffae00; padding: 8px 12px;
+            border-radius: 6px; font-family: 'Montserrat', sans-serif;
+            font-weight: 600; cursor: pointer; outline: none;
         }
 
         select {
-            width: 140px;
-            appearance: none;
-            -webkit-appearance: none;
+            width: 140px; appearance: none; -webkit-appearance: none;
             background: url('data:image/svg+xml;utf8,<svg fill="%23ffae00" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>') no-repeat right 5px center;
         }
 
-        select option {
-            background-color: #0b1120;
-            color: #ffffff;
-        }
+        select option { background-color: #0b1120; color: #ffffff; }
 
-        input[type="color"] {
-            height: 36px;
-            width: 100px;
-            padding: 0 4px;
-        }
-
-        input[type="range"] {
-            accent-color: #ffae00;
-            cursor: pointer;
-            width: 120px;
-        }
+        input[type="color"] { height: 36px; width: 100px; padding: 0 4px; }
+        input[type="range"] { accent-color: #ffae00; cursor: pointer; width: 120px; }
 
         .copy-btn {
-            background-color: #ffae00;
-            color: #000000;
-            border: none;
-            padding: 14px 24px;
-            font-weight: 800;
-            font-size: 14px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-transform: uppercase;
-            font-family: 'Montserrat', sans-serif;
+            background-color: #ffae00; color: #000000; border: none;
+            padding: 14px 24px; font-weight: 800; font-size: 14px;
+            border-radius: 8px; cursor: pointer; transition: all 0.2s;
+            text-transform: uppercase; font-family: 'Montserrat', sans-serif;
         }
 
-        .copy-btn:hover {
-            background-color: #ffcc00;
-            transform: scale(1.05);
-        }
+        .copy-btn:hover { background-color: #ffcc00; transform: scale(1.05); }
 
-        /* Зона предпросмотра */
         .preview-area {
-            flex-grow: 1;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            cursor: crosshair;
+            flex-grow: 1; position: relative; display: flex;
+            flex-direction: column; justify-content: center; align-items: center;
+            overflow: hidden; cursor: crosshair;
             background: radial-gradient(circle at center, #10182b, #0b1120);
             border-radius: 0 0 15px 15px;
         }
 
-        .preview-area h1 {
-            color: #ffae00;
-            font-size: 52px;
-            font-weight: 800;
-            margin-bottom: 15px;
-            z-index: 10;
-        }
-
-        .preview-area p {
-            color: #cbd5e1;
-            font-size: 16px;
-            z-index: 10;
-        }
-
-        .preview-label {
-            position: absolute;
-            top: 25px;
-            left: 40px;
-            color: #ffae00;
-            font-weight: 800;
-            font-size: 14px;
-        }
-
-        .preview-hint {
-            position: absolute;
-            top: 25px;
-            right: 40px;
-            color: #ffae00;
-            font-weight: 800;
-            font-size: 14px;
-        }
+        .preview-area h1 { color: #ffae00; font-size: 52px; font-weight: 800; margin-bottom: 15px; z-index: 10; }
+        .preview-area p { color: #cbd5e1; font-size: 16px; z-index: 10; }
+        .preview-label { position: absolute; top: 25px; left: 40px; color: #ffae00; font-weight: 800; font-size: 14px; }
+        .preview-hint { position: absolute; top: 25px; right: 40px; color: #ffae00; font-weight: 800; font-size: 14px; }
         
-        /* Уведомление */
         .toast {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background-color: #10b981;
-            color: white;
-            padding: 15px 25px;
-            border-radius: 8px;
-            font-weight: 600;
-            opacity: 0;
-            transition: opacity 0.3s;
-            pointer-events: none;
-            z-index: 10000;
+            position: fixed; bottom: 20px; right: 20px;
+            background-color: #10b981; color: white; padding: 15px 25px;
+            border-radius: 8px; font-weight: 600; opacity: 0;
+            transition: opacity 0.3s; pointer-events: none; z-index: 10000;
         }
     </style>
 </head>
@@ -191,7 +97,6 @@
     <div class="editor-container">
         <div class="controls">
             <div class="title">Редактор<br>шлейфа</div>
-            
             <div class="control-group">
                 <label>форма</label>
                 <select id="shape">
@@ -202,22 +107,18 @@
                     <option value="•">Точки •</option>
                 </select>
             </div>
-
             <div class="control-group">
                 <label>цвет</label>
                 <input type="color" id="color" value="#ffae00">
             </div>
-
             <div class="control-group">
                 <label>размер (<span id="sizeVal">24</span>px)</label>
                 <input type="range" id="size" min="10" max="60" value="24">
             </div>
-
             <div class="control-group">
                 <label>плотность</label>
                 <input type="range" id="density" min="1" max="10" value="5">
             </div>
-
             <button class="copy-btn" id="copyBtn">Скопировать код</button>
         </div>
 
@@ -241,23 +142,16 @@
         const copyBtn = document.getElementById('copyBtn');
         const toast = document.getElementById('toast');
 
-        // Обновление цифр у ползунков
-        sizeInput.addEventListener('input', (e) => {
-            sizeVal.innerText = e.target.value;
-        });
+        sizeInput.addEventListener('input', (e) => sizeVal.innerText = e.target.value);
 
-        // Логика предпросмотра
         let lastX = 0, lastY = 0;
         previewArea.addEventListener('mousemove', (e) => {
             const density = 12 - parseInt(densityInput.value); 
-            
             if (Math.abs(e.clientX - lastX) < density && Math.abs(e.clientY - lastY) < density) return;
-            lastX = e.clientX;
-            lastY = e.clientY;
+            lastX = e.clientX; lastY = e.clientY;
 
             const particle = document.createElement('div');
             particle.innerText = shapeInput.value;
-            
             particle.style.position = 'fixed';
             particle.style.left = e.clientX + 'px';
             particle.style.top = e.clientY + 'px';
@@ -276,12 +170,9 @@
                 particle.style.opacity = '0';
             });
 
-            setTimeout(() => {
-                if (particle.parentNode) particle.parentNode.removeChild(particle);
-            }, 1000);
+            setTimeout(() => { if (particle.parentNode) particle.parentNode.removeChild(particle); }, 1000);
         });
 
-        // Генерация кода для Genially
         copyBtn.addEventListener('click', () => {
             const shape = shapeInput.value;
             const color = colorInput.value;
@@ -294,42 +185,40 @@
                         var win = window.parent || window;
                         var doc = win.document;
                         
+                        // ТОТАЛЬНАЯ ЗАЧИСТКА ЗОМБИ-СКРИПТОВ
+                        if (win._magicTrailCleanup) win._magicTrailCleanup();
+                        var oldBoxes = doc.querySelectorAll('.magic-trail-box');
+                        oldBoxes.forEach(function(box) { if (box.parentNode) box.parentNode.removeChild(box); });
+
                         var container = doc.createElement('div');
-                        container.style.cssText = "position:fixed; top:0; left:0; width:100vw; height:100vh; pointer-events:none; z-index:2147483647 !important; overflow:hidden;";
-                        
-                        var updateParent = function() {
-                            var target = doc.fullscreenElement || doc.webkitFullscreenElement || doc.body;
-                            if (container.parentNode !== target) {
-                                target.appendChild(container);
-                            }
-                        };
-                        
-                        updateParent();
-                        doc.addEventListener('fullscreenchange', updateParent);
-                        doc.addEventListener('webkitfullscreenchange', updateParent);
+                        container.className = 'magic-trail-box';
+                        container.style.cssText = "position:fixed; top:0; left:0; width:100vw; height:100vh; pointer-events:none; z-index:2147483647 !important; overflow:hidden; display:none;";
+                        doc.body.appendChild(container);
+
+                        var isActive = false;
+
+                        // Детектор видимости блока: включает шлейф только когда мы физически смотрим на этот слайд
+                        document.body.style.minWidth = "10px"; 
+                        document.body.style.minHeight = "10px";
+                        var observer = new IntersectionObserver(function(entries) {
+                            isActive = entries[0].isIntersecting;
+                            container.style.display = isActive ? 'block' : 'none';
+                        }, { threshold: 0 });
+                        observer.observe(document.body);
 
                         var lastX = 0, lastY = 0;
-                        
                         var onMouseMove = function(e) {
-                            // ЖЕЛЕЗОБЕТОННАЯ ПРОВЕРКА АКТИВНОСТИ СЛАЙДА
-                            // Если Genially переключил слайд, окно фрейма обнуляется
-                            if (window.innerWidth === 0 || window.innerHeight === 0) {
-                                container.style.display = 'none'; // Прячем контейнер
-                                return;
-                            } else {
-                                container.style.display = 'block'; // Показываем, если вернулись
-                            }
+                            if (!isActive) return;
 
                             if (Math.abs(e.clientX - lastX) < ${density} && Math.abs(e.clientY - lastY) < ${density}) return;
                             lastX = e.clientX; lastY = e.clientY;
 
                             var p = doc.createElement('div');
                             p.innerText = '${shape}';
-                            p.style.cssText = "position:absolute; left:" + e.clientX + "px; top:" + e.clientY + "px; color:${color}; font-size:${size}px; pointer-events:none; user-select:none; transition: transform 1s ease-out, opacity 1s ease-out; transform: translate(-50%, -50%);";
+                            p.style.cssText = "position:absolute; left:" + e.clientX + "px; top:" + e.clientY + "px; color:${color}; font-size:${size}px; pointer-events:none; user-select:none; transition: transform 1s ease-out, opacity 1s ease-out; transform: translate(-50%, -50%); z-index:2147483647 !important;";
                             container.appendChild(p);
 
-                            p.getBoundingClientRect();
-
+                            p.getBoundingClientRect(); // Принудительный запуск анимации
                             p.style.transform = "translate(-50%, -50%) translate(" + (Math.random()*40-20) + "px, " + (Math.random()*40-20) + "px) scale(0.2)";
                             p.style.opacity = "0";
 
@@ -338,15 +227,14 @@
 
                         win.addEventListener('mousemove', onMouseMove, true);
 
-                        window.addEventListener('unload', function() {
+                        win._magicTrailCleanup = function() {
                             win.removeEventListener('mousemove', onMouseMove, true);
-                            doc.removeEventListener('fullscreenchange', updateParent);
-                            doc.removeEventListener('webkitfullscreenchange', updateParent);
                             if (container.parentNode) container.parentNode.removeChild(container);
-                        });
-                    } catch(e) {
-                        console.error("Ошибка шлейфа:", e);
-                    }
+                            observer.disconnect();
+                        };
+
+                        window.addEventListener('unload', win._magicTrailCleanup);
+                    } catch(e) { console.error("Ошибка шлейфа:", e); }
                 })();
             <\/script>`;
 

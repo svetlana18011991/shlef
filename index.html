@@ -185,30 +185,60 @@
                         var win = window.parent || window;
                         var doc = win.document;
                         
-                        // ТОТАЛЬНАЯ ЗАЧИСТКА ЗОМБИ-СКРИПТОВ
                         if (win._magicTrailCleanup) win._magicTrailCleanup();
                         var oldBoxes = doc.querySelectorAll('.magic-trail-box');
                         oldBoxes.forEach(function(box) { if (box.parentNode) box.parentNode.removeChild(box); });
 
                         var container = doc.createElement('div');
                         container.className = 'magic-trail-box';
-                        container.style.cssText = "position:fixed; top:0; left:0; width:100vw; height:100vh; pointer-events:none; z-index:2147483647 !important; overflow:hidden; display:none;";
-                        doc.body.appendChild(container);
+                        container.style.cssText = "position:fixed; top:0; left:0; width:100vw; height:100vh; pointer-events:none; z-index:2147483647 !important; overflow:hidden;";
+                        
+                        // Защита для полноэкранного режима (прыжок в нужный блок)
+                        function ensureParent() {
+                            var target = doc.fullscreenElement || doc.webkitFullscreenElement || doc.body;
+                            if (container.parentNode !== target) {
+                                target.appendChild(container);
+                            }
+                        }
+                        ensureParent();
+                        doc.addEventListener('fullscreenchange', ensureParent);
+                        doc.addEventListener('webkitfullscreenchange', ensureParent);
 
-                        var isActive = false;
+                        var isSlideActive = true;
+                        var myIframe = window.frameElement;
 
-                        // Детектор видимости блока: включает шлейф только когда мы физически смотрим на этот слайд
-                        document.body.style.minWidth = "10px"; 
-                        document.body.style.minHeight = "10px";
-                        var observer = new IntersectionObserver(function(entries) {
-                            isActive = entries[0].isIntersecting;
-                            container.style.display = isActive ? 'block' : 'none';
-                        }, { threshold: 0 });
-                        observer.observe(document.body);
+                        // Умный радар: ищет прозрачность слайда (opacity: 0)
+                        if (myIframe) {
+                            var checkInterval = setInterval(function() {
+                                try {
+                                    var rect = myIframe.getBoundingClientRect();
+                                    if (rect.width === 0 || rect.height === 0 || rect.bottom < 0 || rect.right < 0 || rect.left > win.innerWidth) {
+                                        isSlideActive = false;
+                                        container.style.display = 'none';
+                                        return;
+                                    }
+                                    
+                                    var node = myIframe;
+                                    var hidden = false;
+                                    // Проверяем 5 уровней вверх
+                                    for (var i = 0; i < 5; i++) {
+                                        if (!node || node === doc.body) break;
+                                        var style = win.getComputedStyle(node);
+                                        if (style.opacity === "0" || style.visibility === "hidden" || style.display === "none") {
+                                            hidden = true;
+                                            break;
+                                        }
+                                        node = node.parentElement;
+                                    }
+                                    isSlideActive = !hidden;
+                                    container.style.display = isSlideActive ? 'block' : 'none';
+                                } catch(e) {}
+                            }, 200); // Проверяет 5 раз в секунду
+                        }
 
                         var lastX = 0, lastY = 0;
                         var onMouseMove = function(e) {
-                            if (!isActive) return;
+                            if (!isSlideActive) return;
 
                             if (Math.abs(e.clientX - lastX) < ${density} && Math.abs(e.clientY - lastY) < ${density}) return;
                             lastX = e.clientX; lastY = e.clientY;
@@ -218,7 +248,7 @@
                             p.style.cssText = "position:absolute; left:" + e.clientX + "px; top:" + e.clientY + "px; color:${color}; font-size:${size}px; pointer-events:none; user-select:none; transition: transform 1s ease-out, opacity 1s ease-out; transform: translate(-50%, -50%); z-index:2147483647 !important;";
                             container.appendChild(p);
 
-                            p.getBoundingClientRect(); // Принудительный запуск анимации
+                            p.getBoundingClientRect(); 
                             p.style.transform = "translate(-50%, -50%) translate(" + (Math.random()*40-20) + "px, " + (Math.random()*40-20) + "px) scale(0.2)";
                             p.style.opacity = "0";
 
@@ -229,8 +259,10 @@
 
                         win._magicTrailCleanup = function() {
                             win.removeEventListener('mousemove', onMouseMove, true);
+                            doc.removeEventListener('fullscreenchange', ensureParent);
+                            doc.removeEventListener('webkitfullscreenchange', ensureParent);
                             if (container.parentNode) container.parentNode.removeChild(container);
-                            observer.disconnect();
+                            if (typeof checkInterval !== 'undefined') clearInterval(checkInterval);
                         };
 
                         window.addEventListener('unload', win._magicTrailCleanup);

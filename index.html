@@ -185,14 +185,13 @@
                         var win = window.parent || window;
                         var doc = win.document;
                         
-                        // Удаляем старые контейнеры, если вставили код повторно
+                        // Удаляем старые контейнеры
                         if (win._magicTrailCleanup) win._magicTrailCleanup();
                         var oldBoxes = doc.querySelectorAll('.magic-trail-box');
                         oldBoxes.forEach(function(box) { if (box.parentNode) box.parentNode.removeChild(box); });
 
                         var container = doc.createElement('div');
                         container.className = 'magic-trail-box';
-                        // Жесткая фиксация: никаких скроллов и сдвигов
                         container.style.cssText = "position:fixed; top:0; left:0; width:100vw; height:100vh; pointer-events:none; z-index:2147483647 !important; overflow:hidden;";
                         
                         function ensureParent() {
@@ -205,28 +204,28 @@
                         doc.addEventListener('fullscreenchange', ensureParent);
                         doc.addEventListener('webkitfullscreenchange', ensureParent);
 
+                        // Присваиваем уникальный бейджик нашему фрейму
                         var myIframe = window.frameElement;
+                        var frameId = 'trail_' + Math.random().toString(36).substring(2, 12);
+                        if (myIframe) {
+                            myIframe.id = frameId;
+                        }
+
                         var lastX = 0, lastY = 0;
 
-                        // Функция полного уничтожения шлейфа
+                        // Функция тотального уничтожения
                         var cleanup = function() {
                             win.removeEventListener('mousemove', onMouseMove, true);
                             doc.removeEventListener('fullscreenchange', ensureParent);
                             doc.removeEventListener('webkitfullscreenchange', ensureParent);
                             if (container.parentNode) container.parentNode.removeChild(container);
-                            if (typeof healthCheck !== 'undefined') clearInterval(healthCheck);
                         };
 
-                        // ПУЛЬСОМЕТР: Если рамку удалили в редакторе, скрипт удаляется сам за 0.5 сек
-                        var healthCheck = setInterval(function() {
-                            if (myIframe && !myIframe.isConnected) {
-                                cleanup();
-                            }
-                        }, 500);
-
                         var onMouseMove = function(e) {
-                            // Дублирующая проверка при движении мыши
-                            if (myIframe && !myIframe.isConnected) {
+                            // НОВЫЙ АНТИ-ЗОМБИ МЕХАНИЗМ:
+                            // Если рамки с нашим бейджиком больше нет в документе (удалили в редакторе),
+                            // скрипт мгновенно убивает шлейф и отключается.
+                            if (myIframe && !doc.getElementById(frameId)) {
                                 cleanup();
                                 return;
                             }

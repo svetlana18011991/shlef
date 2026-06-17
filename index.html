@@ -39,7 +39,10 @@
             line-height: 1.1; text-transform: uppercase;
         }
 
-        .control-group { display: flex; flex-direction: column; gap: 8px; }
+        .control-group { 
+            display: flex; flex-direction: column; gap: 8px; 
+            transition: opacity 0.3s ease;
+        }
 
         .control-group label {
             font-size: 12px; color: #cbd5e1; font-weight: 600; text-transform: lowercase;
@@ -103,14 +106,16 @@
                     <option value="❤">Сердечки ❤</option>
                     <option value="★">Звёздочки ★</option>
                     <option value="✿">Цветочки ✿</option>
-                    <option value="✦">Сияние ✦</option>
+                    <option value="✨">Сияние ✨</option>
                     <option value="•">Точки •</option>
                 </select>
             </div>
-            <div class="control-group">
+            
+            <div class="control-group" id="colorGroup">
                 <label>цвет</label>
                 <input type="color" id="color" value="#ffae00">
             </div>
+
             <div class="control-group">
                 <label>размер (<span id="sizeVal">24</span>px)</label>
                 <input type="range" id="size" min="10" max="60" value="24">
@@ -135,12 +140,24 @@
     <script>
         const shapeInput = document.getElementById('shape');
         const colorInput = document.getElementById('color');
+        const colorGroup = document.getElementById('colorGroup');
         const sizeInput = document.getElementById('size');
         const densityInput = document.getElementById('density');
         const sizeVal = document.getElementById('sizeVal');
         const previewArea = document.getElementById('previewArea');
         const copyBtn = document.getElementById('copyBtn');
         const toast = document.getElementById('toast');
+
+        // Отключение выбора цвета для эмодзи "Сияние"
+        shapeInput.addEventListener('change', (e) => {
+            if (e.target.value === '✨') {
+                colorGroup.style.opacity = '0.3';
+                colorGroup.style.pointerEvents = 'none';
+            } else {
+                colorGroup.style.opacity = '1';
+                colorGroup.style.pointerEvents = 'auto';
+            }
+        });
 
         sizeInput.addEventListener('input', (e) => sizeVal.innerText = e.target.value);
 

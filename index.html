@@ -148,7 +148,6 @@
         const copyBtn = document.getElementById('copyBtn');
         const toast = document.getElementById('toast');
 
-        // Отключение выбора цвета для эмодзи "Сияние"
         shapeInput.addEventListener('change', (e) => {
             if (e.target.value === '✨') {
                 colorGroup.style.opacity = '0.3';
@@ -266,10 +265,39 @@
                 })();
             <\/script>`;
 
-            navigator.clipboard.writeText(geniallyCode).then(() => {
+            // Функция показа уведомления
+            const showToast = () => {
                 toast.style.opacity = '1';
                 setTimeout(() => toast.style.opacity = '0', 2500);
-            });
+            };
+
+            // Бронебойное копирование с двойной защитой
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(geniallyCode)
+                    .then(showToast)
+                    .catch(() => fallbackCopyTextToClipboard(geniallyCode));
+            } else {
+                fallbackCopyTextToClipboard(geniallyCode);
+            }
+
+            function fallbackCopyTextToClipboard(text) {
+                try {
+                    const textArea = document.createElement("textarea");
+                    textArea.value = text;
+                    // Прячем элемент, фиксируем его чтобы не было скролла
+                    textArea.style.position = "fixed";
+                    textArea.style.top = "0";
+                    textArea.style.left = "-999999px";
+                    document.body.appendChild(textArea);
+                    textArea.focus();
+                    textArea.select();
+                    document.execCommand('copy');
+                    textArea.remove();
+                    showToast();
+                } catch (err) {
+                    alert('Браузер жестко заблокировал копирование в полноэкранном режиме. Нажми Esc и скопируй в обычном режиме.');
+                }
+            }
         });
     </script>
 </body>

@@ -1,157 +1,339 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<title>Magic Trail Editor</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Редактор шлейфа для мышки | Genially</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800&display=swap');
 
-<style>
-body{
-margin:0;
-font-family:Arial;
-background:#050814;
-color:#fff;
-}
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-#editor{
-width:100%;
-height:100vh;
-display:flex;
-flex-direction:column;
-padding:20px;
-box-sizing:border-box;
-}
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #0b1120;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
 
-.bar{
-display:flex;
-gap:10px;
-margin-bottom:10px;
-}
+        .editor-container {
+            width: 90%;
+            max-width: 1200px;
+            height: 80vh;
+            background-color: #0b1120;
+            border: 1px solid #1e293b;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+            position: relative;
+        }
 
-.preview{
-flex:1;
-background:radial-gradient(circle at 20% 20%, #1a3cff33, transparent),
-radial-gradient(circle at 80% 60%, #ffae0033, transparent),
-#0b1022;
-border-radius:20px;
-position:relative;
-overflow:hidden;
-}
+        /* Верхняя панель управления */
+        .controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 25px 40px;
+            border-bottom: 1px solid #1e293b;
+            gap: 20px;
+        }
 
-.p{
-position:absolute;
-pointer-events:none;
-animation:fade .8s ease-out forwards;
-font-weight:900;
-}
+        .title {
+            color: #ffae00;
+            font-size: 26px;
+            font-weight: 800;
+            line-height: 1.1;
+            text-transform: uppercase;
+        }
 
-@keyframes fade{
-0%{opacity:1;transform:scale(1);}
-100%{opacity:0;transform:scale(.2) rotate(120deg);}
-}
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
 
-button{
-padding:10px;
-border-radius:10px;
-cursor:pointer;
-}
-</style>
+        .control-group label {
+            font-size: 12px;
+            color: #cbd5e1;
+            font-weight: 600;
+            text-transform: lowercase;
+        }
+
+        select, input[type="color"] {
+            background-color: transparent;
+            color: #ffffff;
+            border: 2px solid #ffae00;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            outline: none;
+        }
+
+        select {
+            width: 140px;
+            appearance: none;
+            -webkit-appearance: none;
+            background: url('data:image/svg+xml;utf8,<svg fill="%23ffae00" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>') no-repeat right 5px center;
+        }
+
+        select option {
+            background-color: #0b1120;
+            color: #ffffff;
+        }
+
+        input[type="color"] {
+            height: 36px;
+            width: 100px;
+            padding: 0 4px;
+        }
+
+        input[type="range"] {
+            accent-color: #ffae00;
+            cursor: pointer;
+            width: 120px;
+        }
+
+        .copy-btn {
+            background-color: #ffae00;
+            color: #000000;
+            border: none;
+            padding: 14px 24px;
+            font-weight: 800;
+            font-size: 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .copy-btn:hover {
+            background-color: #ffcc00;
+            transform: scale(1.05);
+        }
+
+        /* Зона предпросмотра */
+        .preview-area {
+            flex-grow: 1;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            cursor: crosshair;
+            background: radial-gradient(circle at center, #10182b, #0b1120);
+            border-radius: 0 0 15px 15px;
+        }
+
+        .preview-area h1 {
+            color: #ffae00;
+            font-size: 52px;
+            font-weight: 800;
+            margin-bottom: 15px;
+            z-index: 10;
+        }
+
+        .preview-area p {
+            color: #cbd5e1;
+            font-size: 16px;
+            z-index: 10;
+        }
+
+        .preview-label {
+            position: absolute;
+            top: 25px;
+            left: 40px;
+            color: #ffae00;
+            font-weight: 800;
+            font-size: 14px;
+        }
+
+        .preview-hint {
+            position: absolute;
+            top: 25px;
+            right: 40px;
+            color: #ffae00;
+            font-weight: 800;
+            font-size: 14px;
+        }
+        
+        /* Уведомление */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #10b981;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-weight: 600;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            z-index: 10000;
+        }
+    </style>
 </head>
-
 <body>
 
-<div id="editor">
+    <div class="editor-container">
+        <div class="controls">
+            <div class="title">Редактор<br>шлейфа</div>
+            
+            <div class="control-group">
+                <label>форма</label>
+                <select id="shape">
+                    <option value="❤">Сердечки ❤</option>
+                    <option value="★">Звёздочки ★</option>
+                    <option value="✿">Цветочки ✿</option>
+                    <option value="✨">Сияние ✨</option>
+                    <option value="•">Точки •</option>
+                </select>
+            </div>
 
-<div class="bar">
-<select id="shape">
-<option value="✦">звёзды</option>
-<option value="♡">сердца</option>
-<option value="❀">цветы</option>
-</select>
+            <div class="control-group">
+                <label>цвет</label>
+                <input type="color" id="color" value="#ffae00">
+            </div>
 
-<input id="color" type="color" value="#ffae00">
-<input id="size" type="range" min="8" max="40" value="16">
-<input id="density" type="range" min="20" max="120" value="40">
+            <div class="control-group">
+                <label>размер (<span id="sizeVal">24</span>px)</label>
+                <input type="range" id="size" min="10" max="60" value="24">
+            </div>
 
-<button id="copy">копировать код</button>
-</div>
+            <div class="control-group">
+                <label>плотность</label>
+                <input type="range" id="density" min="1" max="10" value="5">
+            </div>
 
-<div class="preview" id="preview"></div>
+            <button class="copy-btn" id="copyBtn">Скопировать код</button>
+        </div>
 
-</div>
+        <div class="preview-area" id="previewArea">
+            <div class="preview-label">Предпросмотр</div>
+            <div class="preview-hint">Наведи мышкой сюда</div>
+            <h1>Проверь магию здесь</h1>
+            <p>Двигай мышкой по большому полю. Такой же шлейф будет после вставки кода на слайд.</p>
+        </div>
+    </div>
 
-<script>
-const preview=document.getElementById("preview");
-const shape=document.getElementById("shape");
-const color=document.getElementById("color");
-const size=document.getElementById("size");
-const density=document.getElementById("density");
-const copy=document.getElementById("copy");
+    <div class="toast" id="toast">Код успешно скопирован!</div>
 
-let last=0;
+    <script>
+        const shapeInput = document.getElementById('shape');
+        const colorInput = document.getElementById('color');
+        const sizeInput = document.getElementById('size');
+        const densityInput = document.getElementById('density');
+        const sizeVal = document.getElementById('sizeVal');
+        const previewArea = document.getElementById('previewArea');
+        const copyBtn = document.getElementById('copyBtn');
+        const toast = document.getElementById('toast');
 
-preview.addEventListener("mousemove",(e)=>{
+        // Обновление цифр у ползунков
+        sizeInput.addEventListener('input', (e) => {
+            sizeVal.innerText = e.target.value;
+        });
 
-if(Date.now()-last<density.value) return;
-last=Date.now();
+        // Логика предпросмотра
+        let lastX = 0, lastY = 0;
+        previewArea.addEventListener('mousemove', (e) => {
+            const density = 12 - parseInt(densityInput.value); 
+            
+            if (Math.abs(e.clientX - lastX) < density && Math.abs(e.clientY - lastY) < density) return;
+            lastX = e.clientX;
+            lastY = e.clientY;
 
-const r=preview.getBoundingClientRect();
+            const particle = document.createElement('div');
+            particle.innerText = shapeInput.value;
+            
+            particle.style.position = 'fixed';
+            particle.style.left = e.clientX + 'px';
+            particle.style.top = e.clientY + 'px';
+            particle.style.color = colorInput.value;
+            particle.style.fontSize = sizeInput.value + 'px';
+            particle.style.pointerEvents = 'none';
+            particle.style.userSelect = 'none';
+            particle.style.transition = 'transform 1s ease-out, opacity 1s ease-out';
+            particle.style.transform = 'translate(-50%, -50%)';
+            particle.style.zIndex = '9999';
 
-const el=document.createElement("div");
-el.className="p";
-el.textContent=shape.value;
+            document.body.appendChild(particle);
 
-el.style.left=(e.clientX-r.left)+"px";
-el.style.top=(e.clientY-r.top)+"px";
-el.style.color=color.value;
-el.style.fontSize=size.value+"px";
+            requestAnimationFrame(() => {
+                particle.style.transform = `translate(-50%, -50%) translate(${Math.random() * 40 - 20}px, ${Math.random() * 40 - 20}px) scale(0.2)`;
+                particle.style.opacity = '0';
+            });
 
-preview.appendChild(el);
+            setTimeout(() => {
+                if (particle.parentNode) particle.parentNode.removeChild(particle);
+            }, 1000);
+        });
 
-setTimeout(()=>el.remove(),800);
+        // Генерация кода для Genially
+        copyBtn.addEventListener('click', () => {
+            const shape = shapeInput.value;
+            const color = colorInput.value;
+            const size = sizeInput.value;
+            const density = 12 - parseInt(densityInput.value);
 
-});
+            const geniallyCode = `<script>
+                (function() {
+                    try {
+                        var doc = window.parent.document || document;
+                        var win = window.parent || window;
+                        
+                        var container = doc.createElement('div');
+                        container.style.cssText = "position:fixed; top:0; left:0; width:100vw; height:100vh; pointer-events:none; z-index:999999; overflow:hidden;";
+                        doc.body.appendChild(container);
 
-function generate(){
+                        var lastX = 0, lastY = 0;
+                        
+                        var onMouseMove = function(e) {
+                            if (Math.abs(e.clientX - lastX) < ${density} && Math.abs(e.clientY - lastY) < ${density}) return;
+                            lastX = e.clientX; lastY = e.clientY;
 
-return `
-<div class="trail-zone"></div>
+                            var p = doc.createElement('div');
+                            p.innerText = '${shape}';
+                            p.style.cssText = "position:absolute; left:" + e.clientX + "px; top:" + e.clientY + "px; color:${color}; font-size:${size}px; pointer-events:none; user-select:none; transition: transform 1s ease-out, opacity 1s ease-out; transform: translate(-50%, -50%);";
+                            container.appendChild(p);
 
-<script>
-(function(){
-const zone=document.currentScript.parentElement;
-if(zone.dataset.trail) return;
-zone.dataset.trail="1";
+                            p.getBoundingClientRect();
 
-let last=0;
+                            p.style.transform = "translate(-50%, -50%) translate(" + (Math.random()*40-20) + "px, " + (Math.random()*40-20) + "px) scale(0.2)";
+                            p.style.opacity = "0";
 
-zone.addEventListener("mousemove",(e)=>{
-if(Date.now()-last<${density.value}) return;
-last=Date.now();
+                            setTimeout(function() { if(p.parentNode) p.parentNode.removeChild(p); }, 1000);
+                        };
 
-const r=zone.getBoundingClientRect();
+                        win.addEventListener('mousemove', onMouseMove);
 
-const el=document.createElement("div");
-el.textContent="${shape.value}";
-el.style.position="absolute";
-el.style.left=(e.clientX-r.left)+"px";
-el.style.top=(e.clientY-r.top)+"px";
-el.style.fontSize="${size.value}px";
-el.style.color="${color.value}";
-el.style.pointerEvents="none";
+                        window.addEventListener('unload', function() {
+                            win.removeEventListener('mousemove', onMouseMove);
+                            if (container.parentNode) container.parentNode.removeChild(container);
+                        });
+                    } catch(e) {
+                        console.error("Ошибка шлейфа:", e);
+                    }
+                })();
+            <\/script>`;
 
-zone.appendChild(el);
-setTimeout(()=>el.remove(),800);
-});
-})();
-<\/script>
-`;
-}
-
-copy.onclick=async()=>{
-await navigator.clipboard.writeText(generate());
-alert("скопировано");
-};
-</script>
-
+            navigator.clipboard.writeText(geniallyCode).then(() => {
+                toast.style.opacity = '1';
+                setTimeout(() => toast.style.opacity = '0', 2500);
+            });
+        });
+    </script>
 </body>
 </html>

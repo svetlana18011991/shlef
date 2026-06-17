@@ -201,36 +201,21 @@
                         var win = window.parent || window;
                         var doc = win.document;
                         
-                        if (win._magicTrailCleanup) win._magicTrailCleanup();
+                        // Удаляем дубликаты, если вставили код дважды
                         var oldBoxes = doc.querySelectorAll('.magic-trail-box');
                         oldBoxes.forEach(function(box) { if (box.parentNode) box.parentNode.removeChild(box); });
 
                         var container = doc.createElement('div');
                         container.className = 'magic-trail-box';
                         container.style.cssText = "position:fixed; top:0; left:0; width:100vw; height:100vh; pointer-events:none; z-index:2147483647 !important; overflow:hidden;";
-                        
-                        function ensureParent() {
-                            var target = doc.fullscreenElement || doc.webkitFullscreenElement || doc.body;
-                            if (container.parentNode !== target) {
-                                target.appendChild(container);
-                            }
-                        }
-                        ensureParent();
-                        doc.addEventListener('fullscreenchange', ensureParent);
-                        doc.addEventListener('webkitfullscreenchange', ensureParent);
 
                         var lastX = 0, lastY = 0;
 
                         var onMouseMove = function(e) {
-                            // НОВЫЙ ИДЕАЛЬНЫЙ АНТИ-ЗОМБИ:
-                            // Проверяем статус окна. Если рамку удалили, окно получает статус closed.
-                            // Скрипт мгновенно убивает шлейф и больше не работает.
-                            if (window.closed) {
-                                win.removeEventListener('mousemove', onMouseMove, true);
-                                doc.removeEventListener('fullscreenchange', ensureParent);
-                                doc.removeEventListener('webkitfullscreenchange', ensureParent);
-                                if (container.parentNode) container.parentNode.removeChild(container);
-                                return;
+                            // ДИНАМИЧЕСКИЙ ПРИЦЕЛ: всегда ищем самую верхнюю часть экрана (будь то предпросмотр или полноэкранный режим)
+                            var target = doc.fullscreenElement || doc.body;
+                            if (container.parentNode !== target) {
+                                target.appendChild(container);
                             }
 
                             if (Math.abs(e.clientX - lastX) < ${density} && Math.abs(e.clientY - lastY) < ${density}) return;
@@ -249,14 +234,6 @@
                         };
 
                         win.addEventListener('mousemove', onMouseMove, true);
-
-                        win._magicTrailCleanup = function() {
-                            win.removeEventListener('mousemove', onMouseMove, true);
-                            doc.removeEventListener('fullscreenchange', ensureParent);
-                            doc.removeEventListener('webkitfullscreenchange', ensureParent);
-                            if (container.parentNode) container.parentNode.removeChild(container);
-                        };
-
                     } catch(e) { console.error("Ошибка шлейфа:", e); }
                 })();
             <\/script>`;

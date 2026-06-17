@@ -39,10 +39,7 @@
             line-height: 1.1; text-transform: uppercase;
         }
 
-        .control-group { 
-            display: flex; flex-direction: column; gap: 8px; 
-            transition: opacity 0.3s ease;
-        }
+        .control-group { display: flex; flex-direction: column; gap: 8px; }
 
         .control-group label {
             font-size: 12px; color: #cbd5e1; font-weight: 600; text-transform: lowercase;
@@ -110,12 +107,10 @@
                     <option value="•">Точки •</option>
                 </select>
             </div>
-            
-            <div class="control-group" id="colorGroup">
+            <div class="control-group">
                 <label>цвет</label>
                 <input type="color" id="color" value="#ffae00">
             </div>
-
             <div class="control-group">
                 <label>размер (<span id="sizeVal">24</span>px)</label>
                 <input type="range" id="size" min="10" max="60" value="24">
@@ -140,23 +135,12 @@
     <script>
         const shapeInput = document.getElementById('shape');
         const colorInput = document.getElementById('color');
-        const colorGroup = document.getElementById('colorGroup');
         const sizeInput = document.getElementById('size');
         const densityInput = document.getElementById('density');
         const sizeVal = document.getElementById('sizeVal');
         const previewArea = document.getElementById('previewArea');
         const copyBtn = document.getElementById('copyBtn');
         const toast = document.getElementById('toast');
-
-        shapeInput.addEventListener('change', (e) => {
-            if (e.target.value === '✨') {
-                colorGroup.style.opacity = '0.3';
-                colorGroup.style.pointerEvents = 'none';
-            } else {
-                colorGroup.style.opacity = '1';
-                colorGroup.style.pointerEvents = 'auto';
-            }
-        });
 
         sizeInput.addEventListener('input', (e) => sizeVal.innerText = e.target.value);
 
@@ -201,48 +185,60 @@
                         var win = window.parent || window;
                         var doc = win.document;
                         
+                        if (win._magicTrailCleanup) win._magicTrailCleanup();
                         var oldBoxes = doc.querySelectorAll('.magic-trail-box');
                         oldBoxes.forEach(function(box) { if (box.parentNode) box.parentNode.removeChild(box); });
 
                         var container = doc.createElement('div');
                         container.className = 'magic-trail-box';
                         container.style.cssText = "position:fixed; top:0; left:0; width:100vw; height:100vh; pointer-events:none; z-index:2147483647 !important; overflow:hidden;";
-
-                        // Умный прицел: ищем именно белый холст слайда, чтобы прикрепиться поверх него
+                        
+                        // Защита для полноэкранного режима (прыжок в нужный блок)
                         function ensureParent() {
-                            var newTarget = doc.body;
-                            if (doc.fullscreenElement || doc.webkitFullscreenElement) {
-                                newTarget = doc.fullscreenElement || doc.webkitFullscreenElement;
-                            } else {
-                                // Ищем контейнер слайда Genially
-                                var view = doc.querySelector('.genially-view, .sc-jSUZER, .canvas-container, .view-container');
-                                if (view && view.parentElement) {
-                                    newTarget = view.parentElement; // Цепляемся прямо поверх слайда
-                                } else {
-                                    var root = doc.querySelector('#root');
-                                    if (root) newTarget = root;
-                                }
-                            }
-                            if (container.parentNode !== newTarget) {
-                                newTarget.appendChild(container);
+                            var target = doc.fullscreenElement || doc.webkitFullscreenElement || doc.body;
+                            if (container.parentNode !== target) {
+                                target.appendChild(container);
                             }
                         }
-                        
                         ensureParent();
                         doc.addEventListener('fullscreenchange', ensureParent);
                         doc.addEventListener('webkitfullscreenchange', ensureParent);
 
+                        var isSlideActive = true;
+                        var myIframe = window.frameElement;
+
+                        // Умный радар: ищет прозрачность слайда (opacity: 0)
+                        if (myIframe) {
+                            var checkInterval = setInterval(function() {
+                                try {
+                                    var rect = myIframe.getBoundingClientRect();
+                                    if (rect.width === 0 || rect.height === 0 || rect.bottom < 0 || rect.right < 0 || rect.left > win.innerWidth) {
+                                        isSlideActive = false;
+                                        container.style.display = 'none';
+                                        return;
+                                    }
+                                    
+                                    var node = myIframe;
+                                    var hidden = false;
+                                    // Проверяем 5 уровней вверх
+                                    for (var i = 0; i < 5; i++) {
+                                        if (!node || node === doc.body) break;
+                                        var style = win.getComputedStyle(node);
+                                        if (style.opacity === "0" || style.visibility === "hidden" || style.display === "none") {
+                                            hidden = true;
+                                            break;
+                                        }
+                                        node = node.parentElement;
+                                    }
+                                    isSlideActive = !hidden;
+                                    container.style.display = isSlideActive ? 'block' : 'none';
+                                } catch(e) {}
+                            }, 200); // Проверяет 5 раз в секунду
+                        }
+
                         var lastX = 0, lastY = 0;
-
                         var onMouseMove = function(e) {
-                            if (window.closed) {
-                                win.removeEventListener('mousemove', onMouseMove, true);
-                                if (container.parentNode) container.parentNode.removeChild(container);
-                                return;
-                            }
-
-                            // Каждое движение мыши проверяем, не перекрыл ли нас слайд, и если что - выпрыгиваем наверх
-                            ensureParent();
+                            if (!isSlideActive) return;
 
                             if (Math.abs(e.clientX - lastX) < ${density} && Math.abs(e.clientY - lastY) < ${density}) return;
                             lastX = e.clientX; lastY = e.clientY;
@@ -260,40 +256,24 @@
                         };
 
                         win.addEventListener('mousemove', onMouseMove, true);
+
+                        win._magicTrailCleanup = function() {
+                            win.removeEventListener('mousemove', onMouseMove, true);
+                            doc.removeEventListener('fullscreenchange', ensureParent);
+                            doc.removeEventListener('webkitfullscreenchange', ensureParent);
+                            if (container.parentNode) container.parentNode.removeChild(container);
+                            if (typeof checkInterval !== 'undefined') clearInterval(checkInterval);
+                        };
+
+                        window.addEventListener('unload', win._magicTrailCleanup);
                     } catch(e) { console.error("Ошибка шлейфа:", e); }
                 })();
             <\/script>`;
 
-            const showToast = () => {
+            navigator.clipboard.writeText(geniallyCode).then(() => {
                 toast.style.opacity = '1';
                 setTimeout(() => toast.style.opacity = '0', 2500);
-            };
-
-            if (navigator.clipboard && window.isSecureContext) {
-                navigator.clipboard.writeText(geniallyCode)
-                    .then(showToast)
-                    .catch(() => fallbackCopyTextToClipboard(geniallyCode));
-            } else {
-                fallbackCopyTextToClipboard(geniallyCode);
-            }
-
-            function fallbackCopyTextToClipboard(text) {
-                try {
-                    const textArea = document.createElement("textarea");
-                    textArea.value = text;
-                    textArea.style.position = "fixed";
-                    textArea.style.top = "0";
-                    textArea.style.left = "-999999px";
-                    document.body.appendChild(textArea);
-                    textArea.focus();
-                    textArea.select();
-                    document.execCommand('copy');
-                    textArea.remove();
-                    showToast();
-                } catch (err) {
-                    alert('Скопируйте код вручную.');
-                }
-            }
+            });
         });
     </script>
 </body>

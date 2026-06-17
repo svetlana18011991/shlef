@@ -193,7 +193,6 @@
                         container.className = 'magic-trail-box';
                         container.style.cssText = "position:fixed; top:0; left:0; width:100vw; height:100vh; pointer-events:none; z-index:2147483647 !important; overflow:hidden;";
                         
-                        // Защита для полноэкранного режима (прыжок в нужный блок)
                         function ensureParent() {
                             var target = doc.fullscreenElement || doc.webkitFullscreenElement || doc.body;
                             if (container.parentNode !== target) {
@@ -206,13 +205,15 @@
 
                         var isSlideActive = true;
                         var myIframe = window.frameElement;
+                        // Находим "родительский" слайд, к которому принадлежит этот код
+                        var mySlide = myIframe ? myIframe.closest('.genially-view, .swiper-slide, section, .view-container, article') : null;
 
-                        // Умный радар: ищет прозрачность слайда (opacity: 0)
+                        // Базовая проверка видимости фрейма
                         if (myIframe) {
                             var checkInterval = setInterval(function() {
                                 try {
                                     var rect = myIframe.getBoundingClientRect();
-                                    if (rect.width === 0 || rect.height === 0 || rect.bottom < 0 || rect.right < 0 || rect.left > win.innerWidth) {
+                                    if (rect.right < 0 || rect.bottom < 0 || rect.left > win.innerWidth || rect.width === 0) {
                                         isSlideActive = false;
                                         container.style.display = 'none';
                                         return;
@@ -220,25 +221,45 @@
                                     
                                     var node = myIframe;
                                     var hidden = false;
-                                    // Проверяем 5 уровней вверх
-                                    for (var i = 0; i < 5; i++) {
-                                        if (!node || node === doc.body) break;
+                                    while (node && node !== doc.body && node !== doc.documentElement) {
+                                        if (node.getAttribute('aria-hidden') === 'true') { hidden = true; break; }
                                         var style = win.getComputedStyle(node);
-                                        if (style.opacity === "0" || style.visibility === "hidden" || style.display === "none") {
-                                            hidden = true;
-                                            break;
+                                        if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) < 0.05 || style.pointerEvents === 'none') {
+                                            hidden = true; break;
                                         }
                                         node = node.parentElement;
                                     }
                                     isSlideActive = !hidden;
                                     container.style.display = isSlideActive ? 'block' : 'none';
                                 } catch(e) {}
-                            }, 200); // Проверяет 5 раз в секунду
+                            }, 200);
                         }
 
                         var lastX = 0, lastY = 0;
+                        var lastCheck = 0;
+                        var isCovered = false;
+
                         var onMouseMove = function(e) {
                             if (!isSlideActive) return;
+
+                            // БРОНЕБОЙНЫЙ РАДАР: Проверяем, какой слайд физически лежит под мышкой (раз в 100 мс)
+                            var now = Date.now();
+                            if (now - lastCheck > 100) {
+                                lastCheck = now;
+                                if (mySlide) {
+                                    var topEl = doc.elementFromPoint(e.clientX, e.clientY);
+                                    if (topEl) {
+                                        var topSlide = topEl.closest('.genially-view, .swiper-slide, section, .view-container, article');
+                                        // Если слайд под мышкой существует и это НЕ НАШ слайд -> мы перекрыты!
+                                        isCovered = (topSlide && topSlide !== mySlide);
+                                    } else {
+                                        isCovered = false;
+                                    }
+                                }
+                            }
+
+                            // Если наш слайд перекрыт другим (пользователь перелистнул страницу) - глушим шлейф
+                            if (isCovered) return;
 
                             if (Math.abs(e.clientX - lastX) < ${density} && Math.abs(e.clientY - lastY) < ${density}) return;
                             lastX = e.clientX; lastY = e.clientY;

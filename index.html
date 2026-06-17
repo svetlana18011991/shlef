@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Редактор шлейфа для мышки | Genially</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800&display=swap');
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #0b1120;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .editor-container {
+            width: 90%;
+            max-width: 1200px;
+            height: 80vh;
+            background: linear-gradient(135deg, #0f172a, #060b13);
+            border: 2px solid #1e293b;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            position: relative;
+        }
+
+        /* Верхняя панель управления */
+        .controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 30px;
+            border-bottom: 2px solid #1e293b;
+            background-color: #0b1120;
+            border-radius: 15px 15px 0 0;
+            gap: 20px;
+        }
+
+        .title {
+            color: #ffae00;
+            font-size: 24px;
+            font-weight: 800;
+            line-height: 1.2;
+            text-transform: uppercase;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .control-group label {
+            font-size: 12px;
+            color: #94a3b8;
+            font-weight: 600;
+            text-transform: lowercase;
+        }
+
+        select, input[type="color"] {
+            background-color: #0b1120;
+            color: #ffffff;
+            border: 1px solid #ffae00;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-family: 'Montserrat', sans-serif;
+            cursor: pointer;
+            outline: none;
+        }
+
+        select {
+            width: 120px;
+        }
+
+        input[type="color"] {
+            height: 32px;
+            width: 100px;
+            padding: 0;
+        }
+
+        input[type="range"] {
+            accent-color: #ffae00;
+            cursor: pointer;
+        }
+
+        .copy-btn {
+            background-color: #ffae00;
+            color: #000000;
+            border: none;
+            padding: 10px 20px;
+            font-weight: 800;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .copy-btn:hover {
+            background-color: #ffcc00;
+            transform: scale(1.05);
+        }
+
+        /* Зона предпросмотра */
+        .preview-area {
+            flex-grow: 1;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            cursor: crosshair;
+        }
+
+        .preview-area h1 {
+            color: #ffae00;
+            font-size: 48px;
+            font-weight: 800;
+            margin-bottom: 10px;
+            z-index: 10;
+        }
+
+        .preview-area p {
+            color: #cbd5e1;
+            font-size: 16px;
+            z-index: 10;
+        }
+
+        .preview-label {
+            position: absolute;
+            top: 20px;
+            left: 30px;
+            color: #ffae00;
+            font-weight: 800;
+            font-size: 14px;
+        }
+
+        .preview-hint {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            color: #ffae00;
+            font-weight: 800;
+            font-size: 14px;
+        }
+        
+        /* Уведомление о копировании */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #10b981;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-weight: 600;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="editor-container">
+        <div class="controls">
+            <div class="title">Редактор<br>шлейфа</div>
+            
+            <div class="control-group">
+                <label>Форма</label>
+                <select id="shape">
+                    <option value="★">Звёздочки ★</option>
+                    <option value="❤">Сердечки ❤</option>
+                    <option value="✿">Цветочки ✿</option>
+                    <option value="✨">Сияние ✨</option>
+                    <option value="•">Точки •</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label>Цвет</label>
+                <input type="color" id="color" value="#ffae00">
+            </div>
+
+            <div class="control-group">
+                <label>Размер (<span id="sizeVal">24</span>px)</label>
+                <input type="range" id="size" min="10" max="60" value="24">
+            </div>
+
+            <div class="control-group">
+                <label>Плотность</label>
+                <input type="range" id="density" min="1" max="10" value="5">
+            </div>
+
+            <button class="copy-btn" id="copyBtn">Скопировать код</button>
+        </div>
+
+        <div class="preview-area" id="previewArea">
+            <div class="preview-label">Предпросмотр</div>
+            <div class="preview-hint">Наведи мышкой сюда</div>
+            <h1>Проверь магию здесь</h1>
+            <p>Двигай мышкой по большому полю. Такой же шлейф будет после вставки кода на слайд.</p>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">Код успешно скопирован!</div>
+
+    <script>
+        const shapeInput = document.getElementById('shape');
+        const colorInput = document.getElementById('color');
+        const sizeInput = document.getElementById('size');
+        const densityInput = document.getElementById('density');
+        const sizeVal = document.getElementById('sizeVal');
+        const previewArea = document.getElementById('previewArea');
+        const copyBtn = document.getElementById('copyBtn');
+        const toast = document.getElementById('toast');
+
+        // Обновление цифр у ползунков
+        sizeInput.addEventListener('input', (e) => {
+            sizeVal.innerText = e.target.value;
+        });
+
+        // Логика предпросмотра (работает только в блоке превью)
+        let lastX = 0, lastY = 0;
+        previewArea.addEventListener('mousemove', (e) => {
+            const density = 12 - parseInt(densityInput.value); // Инвертируем плотность для шага
+            
+            // Пропускаем создание частицы, если мышка сдвинулась недостаточно далеко
+            if (Math.abs(e.clientX - lastX) < density && Math

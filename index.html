@@ -103,7 +103,7 @@
                     <option value="❤">Сердечки ❤</option>
                     <option value="★">Звёздочки ★</option>
                     <option value="✿">Цветочки ✿</option>
-                    <option value="✨">Сияние ✨</option>
+                    <option value="✦">Сияние ✦</option>
                     <option value="•">Точки •</option>
                 </select>
             </div>
@@ -185,7 +185,6 @@
                         var win = window.parent || window;
                         var doc = win.document;
                         
-                        // Удаляем старые контейнеры
                         if (win._magicTrailCleanup) win._magicTrailCleanup();
                         var oldBoxes = doc.querySelectorAll('.magic-trail-box');
                         oldBoxes.forEach(function(box) { if (box.parentNode) box.parentNode.removeChild(box); });
@@ -204,28 +203,25 @@
                         doc.addEventListener('fullscreenchange', ensureParent);
                         doc.addEventListener('webkitfullscreenchange', ensureParent);
 
-                        // Присваиваем уникальный бейджик нашему фрейму
                         var myIframe = window.frameElement;
-                        var frameId = 'trail_' + Math.random().toString(36).substring(2, 12);
-                        if (myIframe) {
-                            myIframe.id = frameId;
-                        }
-
                         var lastX = 0, lastY = 0;
 
-                        // Функция тотального уничтожения
                         var cleanup = function() {
                             win.removeEventListener('mousemove', onMouseMove, true);
                             doc.removeEventListener('fullscreenchange', ensureParent);
                             doc.removeEventListener('webkitfullscreenchange', ensureParent);
                             if (container.parentNode) container.parentNode.removeChild(container);
+                            if (typeof healthCheck !== 'undefined') clearInterval(healthCheck);
                         };
 
+                        var healthCheck = setInterval(function() {
+                            if (myIframe && !myIframe.isConnected) {
+                                cleanup();
+                            }
+                        }, 500);
+
                         var onMouseMove = function(e) {
-                            // НОВЫЙ АНТИ-ЗОМБИ МЕХАНИЗМ:
-                            // Если рамки с нашим бейджиком больше нет в документе (удалили в редакторе),
-                            // скрипт мгновенно убивает шлейф и отключается.
-                            if (myIframe && !doc.getElementById(frameId)) {
+                            if (myIframe && !myIframe.isConnected) {
                                 cleanup();
                                 return;
                             }

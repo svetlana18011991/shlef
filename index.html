@@ -185,11 +185,16 @@
                         var win = window.parent || window;
                         var doc = win.document;
                         
-                        // Создаем контейнер строго для этого блока
+                        // Удаляем старые контейнеры, если вставили код повторно
+                        if (win._magicTrailCleanup) win._magicTrailCleanup();
+                        var oldBoxes = doc.querySelectorAll('.magic-trail-box');
+                        oldBoxes.forEach(function(box) { if (box.parentNode) box.parentNode.removeChild(box); });
+
                         var container = doc.createElement('div');
+                        container.className = 'magic-trail-box';
+                        // Жесткая фиксация: никаких скроллов и сдвигов
                         container.style.cssText = "position:fixed; top:0; left:0; width:100vw; height:100vh; pointer-events:none; z-index:2147483647 !important; overflow:hidden;";
                         
-                        // Логика поддержки полноэкранного режима
                         function ensureParent() {
                             var target = doc.fullscreenElement || doc.webkitFullscreenElement || doc.body;
                             if (container.parentNode !== target) {
@@ -200,45 +205,32 @@
                         doc.addEventListener('fullscreenchange', ensureParent);
                         doc.addEventListener('webkitfullscreenchange', ensureParent);
 
-                        // Находим "родной" слайд, куда вставлен код
                         var myIframe = window.frameElement;
-                        var mySlide = myIframe ? (myIframe.closest('section, .genially-view, .swiper-slide, article, .page') || myIframe.parentElement) : null;
-
                         var lastX = 0, lastY = 0;
 
-                        // Функция самоуничтожения шлейфа
+                        // Функция полного уничтожения шлейфа
                         var cleanup = function() {
                             win.removeEventListener('mousemove', onMouseMove, true);
                             doc.removeEventListener('fullscreenchange', ensureParent);
                             doc.removeEventListener('webkitfullscreenchange', ensureParent);
                             if (container.parentNode) container.parentNode.removeChild(container);
+                            if (typeof healthCheck !== 'undefined') clearInterval(healthCheck);
                         };
 
+                        // ПУЛЬСОМЕТР: Если рамку удалили в редакторе, скрипт удаляется сам за 0.5 сек
+                        var healthCheck = setInterval(function() {
+                            if (myIframe && !myIframe.isConnected) {
+                                cleanup();
+                            }
+                        }, 500);
+
                         var onMouseMove = function(e) {
-                            // 1. ЗАЩИТА ОТ ЗОМБИ: Если блок удалили, скрипт убивает сам себя
+                            // Дублирующая проверка при движении мыши
                             if (myIframe && !myIframe.isConnected) {
                                 cleanup();
                                 return;
                             }
 
-                            // 2. БАЗОВАЯ ВИДИМОСТЬ СЛАЙДА
-                            if (mySlide) {
-                                var style = win.getComputedStyle(mySlide);
-                                if (style.display === 'none' || parseFloat(style.opacity) < 0.05 || style.visibility === 'hidden') return;
-                                
-                                var rect = mySlide.getBoundingClientRect();
-                                if (rect.right <= 0 || rect.left >= win.innerWidth || rect.bottom <= 0 || rect.top >= win.innerHeight) return;
-                            }
-
-                            // 3. РЕНТГЕН ПОД МЫШКОЙ: Какой слайд сейчас перекрывает экран?
-                            var topEl = doc.elementFromPoint(e.clientX, e.clientY);
-                            if (topEl && mySlide) {
-                                var targetSlide = topEl.closest('section, .genially-view, .swiper-slide, article, .page');
-                                // Если под мышкой чужой слайд — стоп машина!
-                                if (targetSlide && targetSlide !== mySlide) return;
-                            }
-
-                            // РИСУЕМ ШЛЕЙФ
                             if (Math.abs(e.clientX - lastX) < ${density} && Math.abs(e.clientY - lastY) < ${density}) return;
                             lastX = e.clientX; lastY = e.clientY;
 
@@ -254,10 +246,8 @@
                             setTimeout(function() { if(p.parentNode) p.parentNode.removeChild(p); }, 1000);
                         };
 
-                        // Перехватываем мышь на уровне всего окна
                         win.addEventListener('mousemove', onMouseMove, true);
-                        
-                        // Доп. очистка при закрытии фрейма
+                        win._magicTrailCleanup = cleanup;
                         window.addEventListener('unload', cleanup);
 
                     } catch(e) { console.error("Ошибка шлейфа:", e); }

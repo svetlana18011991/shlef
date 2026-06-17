@@ -201,6 +201,10 @@
                         var win = window.parent || window;
                         var doc = win.document;
                         
+                        if (win._magicTrailCleanup) win._magicTrailCleanup();
+                        var oldBoxes = doc.querySelectorAll('.magic-trail-box');
+                        oldBoxes.forEach(function(box) { if (box.parentNode) box.parentNode.removeChild(box); });
+
                         var container = doc.createElement('div');
                         container.className = 'magic-trail-box';
                         container.style.cssText = "position:fixed; top:0; left:0; width:100vw; height:100vh; pointer-events:none; z-index:2147483647 !important; overflow:hidden;";
@@ -215,27 +219,18 @@
                         doc.addEventListener('fullscreenchange', ensureParent);
                         doc.addEventListener('webkitfullscreenchange', ensureParent);
 
-                        var myIframe = window.frameElement;
                         var lastX = 0, lastY = 0;
-                        var wasConnected = false;
-
-                        var cleanup = function() {
-                            win.removeEventListener('mousemove', onMouseMove, true);
-                            doc.removeEventListener('fullscreenchange', ensureParent);
-                            doc.removeEventListener('webkitfullscreenchange', ensureParent);
-                            if (container.parentNode) container.parentNode.removeChild(container);
-                        };
 
                         var onMouseMove = function(e) {
-                            // НОВЫЙ УМНЫЙ АНТИ-ЗОМБИ МЕХАНИЗМ
-                            if (myIframe) {
-                                if (myIframe.isConnected) {
-                                    wasConnected = true; // Запоминаем, что рамка реально появилась на экране
-                                } else if (wasConnected) {
-                                    // Если она БЫЛА на экране, а теперь исчезла - значит её удалили! Убиваем шлейф.
-                                    cleanup();
-                                    return;
-                                }
+                            // НОВЫЙ ИДЕАЛЬНЫЙ АНТИ-ЗОМБИ:
+                            // Проверяем статус окна. Если рамку удалили, окно получает статус closed.
+                            // Скрипт мгновенно убивает шлейф и больше не работает.
+                            if (window.closed) {
+                                win.removeEventListener('mousemove', onMouseMove, true);
+                                doc.removeEventListener('fullscreenchange', ensureParent);
+                                doc.removeEventListener('webkitfullscreenchange', ensureParent);
+                                if (container.parentNode) container.parentNode.removeChild(container);
+                                return;
                             }
 
                             if (Math.abs(e.clientX - lastX) < ${density} && Math.abs(e.clientY - lastY) < ${density}) return;
@@ -254,7 +249,13 @@
                         };
 
                         win.addEventListener('mousemove', onMouseMove, true);
-                        window.addEventListener('unload', cleanup);
+
+                        win._magicTrailCleanup = function() {
+                            win.removeEventListener('mousemove', onMouseMove, true);
+                            doc.removeEventListener('fullscreenchange', ensureParent);
+                            doc.removeEventListener('webkitfullscreenchange', ensureParent);
+                            if (container.parentNode) container.parentNode.removeChild(container);
+                        };
 
                     } catch(e) { console.error("Ошибка шлейфа:", e); }
                 })();
